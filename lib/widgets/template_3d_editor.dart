@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math' as math;
 
 class Template3DEditor extends StatefulWidget {
   final Map<String, dynamic> currentTemplate;
   final Function(Map<String, dynamic>) onTemplateChanged;
+  final String garmentType; // Tipo específico de prenda
+  final String category; // Categoría de la prenda
 
   const Template3DEditor({
     super.key,
     required this.currentTemplate,
     required this.onTemplateChanged,
+    required this.garmentType,
+    required this.category,
   });
 
   @override
@@ -22,16 +28,7 @@ class _Template3DEditorState extends State<Template3DEditor>
 
   // Plantillas predefinidas para diferentes tipos de prendas
   Map<String, dynamic> _currentTemplate = {};
-
-  // Editor de formas
-  List<String> _garmentTypes = [
-    'Camiseta',
-    'Pantalón',
-    'Vestido',
-    'Chaqueta',
-    'Falda',
-    'Blusa',
-  ];
+  late String _currentGarmentType; // Tipo de prenda específico que no cambia
 
   // Editor de dimensiones
   Map<String, double> _dimensions = {
@@ -59,6 +56,7 @@ class _Template3DEditorState extends State<Template3DEditor>
   void initState() {
     super.initState();
     _currentTemplate = Map<String, dynamic>.from(widget.currentTemplate);
+    _currentGarmentType = widget.garmentType; // Fijar el tipo de prenda
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -130,7 +128,7 @@ class _Template3DEditorState extends State<Template3DEditor>
     );
   }
 
-  // 1. EDITOR DE TIPO DE PRENDA
+  // 1. EDITOR DE PRENDA ESPECÍFICA (No permite cambiar tipo)
   Widget _buildGarmentTypeEditor() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -138,50 +136,86 @@ class _Template3DEditorState extends State<Template3DEditor>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Selecciona el tipo de prenda',
+            'Editando Prenda',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.2,
-              ),
-              itemCount: _garmentTypes.length,
-              itemBuilder: (context, index) {
-                final type = _garmentTypes[index];
-                final isSelected = _currentTemplate['garment_type'] == type;
-
-                return Card(
-                  elevation: isSelected ? 8 : 2,
-                  color: isSelected ? Colors.indigo : Colors.white,
-                  child: InkWell(
-                    onTap: () => _selectGarmentType(type),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _getGarmentIcon(type),
-                          size: 48,
-                          color: isSelected ? Colors.white : Colors.indigo,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          type,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black87,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+          // Widget informativo del tipo de prenda seleccionado
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.indigo.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.indigo, width: 2),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  _getGarmentIcon(_currentGarmentType),
+                  size: 80,
+                  color: Colors.indigo,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  widget.category,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.indigo,
                   ),
-                );
-              },
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Tipo: $_currentGarmentType',
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Utiliza las pestañas para personalizar las dimensiones, detalles y vista previa de tu ${widget.category.toLowerCase()}.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Botón para guardar diseño
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _saveDesignToFirebase,
+              icon: const Icon(Icons.save),
+              label: const Text('Guardar Diseño en Firebase'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Información adicional
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info, color: Colors.blue.shade600),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Este editor está específicamente configurado para ${widget.category.toLowerCase()}. Los cambios se guardarán automáticamente.',
+                    style: TextStyle(fontSize: 12, color: Colors.blue.shade700),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -596,11 +630,83 @@ class _Template3DEditorState extends State<Template3DEditor>
     }
   }
 
-  void _selectGarmentType(String type) {
-    setState(() {
-      _currentTemplate['garment_type'] = type;
+  // Método para guardar el diseño en Firebase
+  Future<void> _saveDesignToFirebase() async {
+    try {
+      // Mostrar dialog de progreso
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (context) => const AlertDialog(
+              content: Row(
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(width: 16),
+                  Text('Guardando diseño...'),
+                ],
+              ),
+            ),
+      );
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        Navigator.pop(context); // Cerrar dialog de progreso
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Debes iniciar sesión para guardar diseños'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Preparar datos del diseño
+      final designData = {
+        'userId': user.uid,
+        'userName': user.displayName ?? 'Usuario desconocido',
+        'userEmail': user.email,
+        'name': 'Diseño ${widget.category}',
+        'garmentType': _currentGarmentType,
+        'category': widget.category,
+        'dimensions': Map<String, double>.from(_dimensions),
+        'details': Map<String, dynamic>.from(_details),
+        'template': Map<String, dynamic>.from(_currentTemplate),
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      // Guardar en Firestore
+      await FirebaseFirestore.instance.collection('designs').add(designData);
+
+      Navigator.pop(context); // Cerrar dialog de progreso
+
+      // Mostrar confirmación
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('¡Diseño guardado exitosamente!'),
+          backgroundColor: Colors.green,
+          action: SnackBarAction(
+            label: 'Ver Proyectos',
+            textColor: Colors.white,
+            onPressed: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+          ),
+        ),
+      );
+
+      // Actualizar el template actual
       _updateTemplate();
-    });
+    } catch (e) {
+      Navigator.pop(context); // Cerrar dialog de progreso
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al guardar: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _updateTemplate() {

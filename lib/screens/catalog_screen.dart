@@ -10,43 +10,49 @@ class CatalogScreen extends StatefulWidget {
 }
 
 class _CatalogScreenState extends State<CatalogScreen> {
-  // Categorías de ropa disponibles
+  // Categorías de ropa disponibles con iconos específicos
   final List<Map<String, dynamic>> _categories = [
     {
       'name': 'Camisetas',
-      'icon': Icons.checkroom,
+      'icon': Icons.sports_basketball, // Icono deportivo para camisetas
       'color': Colors.blue,
-      'description': 'Camisetas personalizadas',
+      'description': 'Camisetas y tops personalizados',
+      'garment_type': 'camiseta',
     },
     {
       'name': 'Hoodies',
-      'icon': Icons.dry_cleaning,
+      'icon': Icons.wb_cloudy, // Icono de nube para ropa abrigada
       'color': Colors.purple,
-      'description': 'Sudaderas con capucha',
+      'description': 'Sudaderas con capucha cómodas',
+      'garment_type': 'chaqueta',
     },
     {
       'name': 'Pantalones',
-      'icon': Icons.straighten,
+      'icon': Icons.straighten, // Icono de línea recta para pantalones
       'color': Colors.green,
-      'description': 'Pantalones casuales',
+      'description': 'Pantalones casuales y formales',
+      'garment_type': 'pantalón',
     },
     {
       'name': 'Vestidos',
-      'icon': Icons.woman,
+      'icon': Icons.auto_awesome, // Icono de estrella brillante para vestidos
       'color': Colors.pink,
-      'description': 'Vestidos elegantes',
+      'description': 'Vestidos elegantes y casuales',
+      'garment_type': 'vestido',
     },
     {
       'name': 'Chaquetas',
-      'icon': Icons.yard,
+      'icon': Icons.umbrella, // Icono de paraguas para protección
       'color': Colors.orange,
-      'description': 'Chaquetas deportivas',
+      'description': 'Chaquetas deportivas y formales',
+      'garment_type': 'chaqueta',
     },
     {
       'name': 'Zapatos',
-      'icon': Icons.sports_handball,
+      'icon': Icons.hiking, // Icono de senderismo para calzado
       'color': Colors.brown,
-      'description': 'Calzado personalizado',
+      'description': 'Calzado deportivo y casual',
+      'garment_type': 'zapatos',
     },
   ];
 
@@ -114,6 +120,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       category['color'] is Color
                           ? category['color']
                           : Colors.blue,
+                  garmentType: category['garment_type'] ?? 'camiseta',
                 ),
           ),
         );

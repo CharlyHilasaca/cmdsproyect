@@ -141,30 +141,44 @@ class _GarmentPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2;
 
-    // Cuerpo de la camiseta con efecto 3D
-    final bodyPath = Path();
+    final shadowPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.1)
+          ..style = PaintingStyle.fill;
 
-    // Frente de la camiseta
-    bodyPath.moveTo(-60, -80);
-    bodyPath.lineTo(60, -80);
-    bodyPath.lineTo(80, -60);
-    bodyPath.lineTo(80, 100);
-    bodyPath.lineTo(-80, 100);
-    bodyPath.lineTo(-80, -60);
+    // Sombra base para realismo
+    final shadowPath = Path();
+    shadowPath.addOval(
+      Rect.fromCenter(center: const Offset(5, 110), width: 180, height: 40),
+    );
+    canvas.drawPath(shadowPath, shadowPaint);
+
+    // Cuerpo de la camiseta con forma más realista
+    final bodyPath = Path();
+    bodyPath.moveTo(-65, -85); // Hombro izquierdo
+    bodyPath.quadraticBezierTo(-70, -90, -60, -95); // Cuello izquierdo
+    bodyPath.lineTo(60, -95); // Cuello derecho
+    bodyPath.quadraticBezierTo(70, -90, 65, -85); // Hombro derecho
+    bodyPath.lineTo(85, -65); // Axila derecha
+    bodyPath.lineTo(85, 100); // Cintura derecha
+    bodyPath.quadraticBezierTo(80, 105, 75, 105); // Borde inferior derecho
+    bodyPath.lineTo(-75, 105); // Borde inferior izquierdo
+    bodyPath.quadraticBezierTo(-80, 105, -85, 100); // Borde inferior izquierdo
+    bodyPath.lineTo(-85, -65); // Axila izquierda
     bodyPath.close();
 
     canvas.drawPath(bodyPath, paint);
     canvas.drawPath(bodyPath, outlinePaint);
 
-    // Mangas
-    final sleevePaint = Paint()..color = _getGarmentColor().withOpacity(0.8);
+    // Mangas con mejor forma
+    final sleevePaint = Paint()..color = _getGarmentColor().withOpacity(0.85);
 
-    // Manga izquierda
+    // Manga izquierda con forma más natural
     final leftSleeve = Path();
-    leftSleeve.moveTo(-80, -60);
-    leftSleeve.lineTo(-120, -40);
-    leftSleeve.lineTo(-110, 20);
-    leftSleeve.lineTo(-80, 30);
+    leftSleeve.moveTo(-85, -65);
+    leftSleeve.quadraticBezierTo(-125, -45, -130, -10);
+    leftSleeve.quadraticBezierTo(-125, 25, -115, 35);
+    leftSleeve.quadraticBezierTo(-95, 40, -85, 35);
     leftSleeve.close();
 
     canvas.drawPath(leftSleeve, sleevePaint);
@@ -172,20 +186,37 @@ class _GarmentPainter extends CustomPainter {
 
     // Manga derecha
     final rightSleeve = Path();
-    rightSleeve.moveTo(80, -60);
-    rightSleeve.lineTo(120, -40);
-    rightSleeve.lineTo(110, 20);
-    rightSleeve.lineTo(80, 30);
+    rightSleeve.moveTo(85, -65);
+    rightSleeve.quadraticBezierTo(125, -45, 130, -10);
+    rightSleeve.quadraticBezierTo(125, 25, 115, 35);
+    rightSleeve.quadraticBezierTo(95, 40, 85, 35);
     rightSleeve.close();
 
     canvas.drawPath(rightSleeve, sleevePaint);
     canvas.drawPath(rightSleeve, outlinePaint);
 
-    // Cuello
+    // Cuello más detallado
     final neckPaint = Paint()..color = _getGarmentColor().withOpacity(0.9);
+    final neckPath = Path();
+    neckPath.addOval(const Rect.fromLTWH(-30, -100, 60, 30));
+    canvas.drawPath(neckPath, neckPaint);
+    canvas.drawPath(neckPath, outlinePaint);
 
-    canvas.drawOval(const Rect.fromLTWH(-25, -85, 50, 25), neckPaint);
-    canvas.drawOval(const Rect.fromLTWH(-25, -85, 50, 25), outlinePaint);
+    // Costuras decorativas
+    final seamPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.2)
+          ..strokeWidth = 1
+          ..style = PaintingStyle.stroke;
+
+    // Costuras de los hombros
+    canvas.drawLine(const Offset(-65, -85), const Offset(-85, -65), seamPaint);
+    canvas.drawLine(const Offset(65, -85), const Offset(85, -65), seamPaint);
+
+    // Etiqueta pequeña
+    final labelPaint = Paint()..color = Colors.white.withOpacity(0.8);
+    canvas.drawRect(const Rect.fromLTWH(-15, 80, 30, 15), labelPaint);
+    canvas.drawRect(const Rect.fromLTWH(-15, 80, 30, 15), outlinePaint);
 
     // Detalles decorativos
     _drawPattern(canvas, bodyPath);
@@ -203,18 +234,40 @@ class _GarmentPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2;
 
-    // Cintura
+    final shadowPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.1)
+          ..style = PaintingStyle.fill;
+
+    // Sombra base
+    final shadowPath = Path();
+    shadowPath.addOval(
+      Rect.fromCenter(center: const Offset(5, 160), width: 140, height: 30),
+    );
+    canvas.drawPath(shadowPath, shadowPaint);
+
+    // Cintura con forma más realista
     final waistPath = Path();
-    waistPath.addRect(const Rect.fromLTWH(-60, -50, 120, 30));
+    waistPath.moveTo(-65, -55);
+    waistPath.quadraticBezierTo(-70, -60, -65, -65); // Cintura izquierda
+    waistPath.lineTo(65, -65); // Cintura derecha
+    waistPath.quadraticBezierTo(70, -60, 65, -55); // Cintura derecha
+    waistPath.lineTo(65, -20); // Cadera derecha
+    waistPath.lineTo(-65, -20); // Cadera izquierda
+    waistPath.close();
+
     canvas.drawPath(waistPath, paint);
     canvas.drawPath(waistPath, outlinePaint);
 
-    // Pierna izquierda
+    // Pierna izquierda con forma más natural
     final leftLeg = Path();
-    leftLeg.moveTo(-60, -20);
+    leftLeg.moveTo(-65, -20);
     leftLeg.lineTo(-30, -20);
-    leftLeg.lineTo(-25, 150);
-    leftLeg.lineTo(-55, 150);
+    leftLeg.quadraticBezierTo(-25, 50, -30, 100); // Muslo
+    leftLeg.quadraticBezierTo(-28, 130, -32, 150); // Pantorrilla
+    leftLeg.lineTo(-58, 150); // Tobillo izquierdo
+    leftLeg.quadraticBezierTo(-62, 130, -60, 100); // Pantorrilla exterior
+    leftLeg.quadraticBezierTo(-65, 50, -65, -20); // Muslo exterior
     leftLeg.close();
 
     canvas.drawPath(leftLeg, paint);
@@ -223,13 +276,61 @@ class _GarmentPainter extends CustomPainter {
     // Pierna derecha
     final rightLeg = Path();
     rightLeg.moveTo(30, -20);
-    rightLeg.lineTo(60, -20);
-    rightLeg.lineTo(55, 150);
-    rightLeg.lineTo(25, 150);
+    rightLeg.lineTo(65, -20);
+    rightLeg.quadraticBezierTo(65, 50, 60, 100);
+    rightLeg.quadraticBezierTo(62, 130, 58, 150);
+    rightLeg.lineTo(32, 150);
+    rightLeg.quadraticBezierTo(28, 130, 30, 100);
+    rightLeg.quadraticBezierTo(25, 50, 30, -20);
     rightLeg.close();
 
     canvas.drawPath(rightLeg, paint);
     canvas.drawPath(rightLeg, outlinePaint);
+
+    // Costuras decorativas
+    final seamPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.2)
+          ..strokeWidth = 1
+          ..style = PaintingStyle.stroke;
+
+    // Costura interna piernas
+    canvas.drawLine(const Offset(-30, -20), const Offset(-32, 150), seamPaint);
+    canvas.drawLine(const Offset(30, -20), const Offset(32, 150), seamPaint);
+
+    // Bolsillos frontales
+    final pocketPaint = Paint()..color = _getGarmentColor().withOpacity(0.8);
+
+    // Bolsillo izquierdo
+    final leftPocket = Path();
+    leftPocket.addRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(-55, -10, 15, 20),
+        const Radius.circular(3),
+      ),
+    );
+    canvas.drawPath(leftPocket, pocketPaint);
+    canvas.drawPath(leftPocket, outlinePaint);
+
+    // Bolsillo derecho
+    final rightPocket = Path();
+    rightPocket.addRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(40, -10, 15, 20),
+        const Radius.circular(3),
+      ),
+    );
+    canvas.drawPath(rightPocket, pocketPaint);
+    canvas.drawPath(rightPocket, outlinePaint);
+
+    // Cremallera o botón
+    final zipperPaint =
+        Paint()
+          ..color = Colors.grey[600]!
+          ..strokeWidth = 2
+          ..style = PaintingStyle.stroke;
+
+    canvas.drawLine(const Offset(0, -50), const Offset(0, -25), zipperPaint);
 
     _drawPattern(canvas, leftLeg);
   }
@@ -246,39 +347,85 @@ class _GarmentPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2;
 
-    // Parte superior del vestido
+    final shadowPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.1)
+          ..style = PaintingStyle.fill;
+
+    // Sombra base
+    final shadowPath = Path();
+    shadowPath.addOval(
+      Rect.fromCenter(center: const Offset(5, 150), width: 220, height: 40),
+    );
+    canvas.drawPath(shadowPath, shadowPaint);
+
+    // Parte superior del vestido con forma más elegante
     final topPath = Path();
-    topPath.moveTo(-50, -80);
-    topPath.lineTo(50, -80);
-    topPath.lineTo(60, -60);
-    topPath.lineTo(60, 20);
-    topPath.lineTo(-60, 20);
-    topPath.lineTo(-60, -60);
+    topPath.moveTo(-45, -85); // Hombro izquierdo
+    topPath.quadraticBezierTo(-50, -90, -40, -95); // Cuello izquierdo
+    topPath.lineTo(40, -95); // Cuello derecho
+    topPath.quadraticBezierTo(50, -90, 45, -85); // Hombro derecho
+    topPath.lineTo(55, -65); // Axila derecha
+    topPath.quadraticBezierTo(60, 0, 65, 25); // Cintura derecha
+    topPath.lineTo(-65, 25); // Cintura izquierda
+    topPath.quadraticBezierTo(-60, 0, -55, -65); // Axila izquierda
     topPath.close();
 
     canvas.drawPath(topPath, paint);
     canvas.drawPath(topPath, outlinePaint);
 
-    // Falda del vestido (más amplia)
+    // Falda del vestido con forma más fluida y elegante
     final skirtPath = Path();
-    skirtPath.moveTo(-60, 20);
-    skirtPath.lineTo(60, 20);
-    skirtPath.lineTo(100, 140);
-    skirtPath.lineTo(-100, 140);
+    skirtPath.moveTo(-65, 25);
+    skirtPath.lineTo(65, 25);
+    skirtPath.quadraticBezierTo(90, 60, 105, 100); // Lado derecho con curva
+    skirtPath.quadraticBezierTo(110, 120, 105, 145); // Borde inferior derecho
+    skirtPath.lineTo(-105, 145); // Borde inferior izquierdo
+    skirtPath.quadraticBezierTo(
+      -110,
+      120,
+      -105,
+      100,
+    ); // Borde inferior izquierdo con curva
+    skirtPath.quadraticBezierTo(-90, 60, -65, 25); // Lado izquierdo con curva
     skirtPath.close();
 
     canvas.drawPath(skirtPath, paint);
     canvas.drawPath(skirtPath, outlinePaint);
 
-    // Tirantes
+    // Tirantes más delicados
     final strapPaint =
         Paint()
           ..color = _getGarmentColor().withOpacity(0.9)
-          ..strokeWidth = 8
+          ..strokeWidth = 6
           ..style = PaintingStyle.stroke;
 
-    canvas.drawLine(const Offset(-40, -80), const Offset(-40, -60), strapPaint);
-    canvas.drawLine(const Offset(40, -80), const Offset(40, -60), strapPaint);
+    canvas.drawLine(const Offset(-35, -85), const Offset(-35, -65), strapPaint);
+    canvas.drawLine(const Offset(35, -85), const Offset(35, -65), strapPaint);
+
+    // Detalles decorativos del vestido
+    final decorPaint =
+        Paint()
+          ..color = Colors.white.withOpacity(0.6)
+          ..strokeWidth = 1
+          ..style = PaintingStyle.stroke;
+
+    // Línea decorativa en la cintura
+    canvas.drawLine(const Offset(-65, 25), const Offset(65, 25), decorPaint);
+
+    // Pequeños detalles florales o de encaje
+    for (int i = 0; i < 5; i++) {
+      final x = -40 + (i * 20.0);
+      canvas.drawCircle(Offset(x, 30 + (i % 2) * 5), 2, decorPaint);
+    }
+
+    // Cuello más detallado
+    final neckPaint = Paint()..color = _getGarmentColor().withOpacity(0.9);
+
+    final neckPath = Path();
+    neckPath.addOval(const Rect.fromLTWH(-25, -100, 50, 25));
+    canvas.drawPath(neckPath, neckPaint);
+    canvas.drawPath(neckPath, outlinePaint);
 
     _drawPattern(canvas, skirtPath);
   }
@@ -399,42 +546,114 @@ class _GarmentPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2;
 
-    // Zapato izquierdo
+    final shadowPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.15)
+          ..style = PaintingStyle.fill;
+
+    // Sombras de los zapatos
+    canvas.drawOval(const Rect.fromLTWH(-85, 60, 70, 15), shadowPaint);
+    canvas.drawOval(const Rect.fromLTWH(15, 60, 70, 15), shadowPaint);
+
+    // Zapato izquierdo con forma más realista
     final leftShoe = Path();
-    leftShoe.addOval(const Rect.fromLTWH(-80, 20, 60, 40));
+    leftShoe.moveTo(-85, 35); // Talón
+    leftShoe.quadraticBezierTo(-90, 30, -85, 25); // Parte superior del talón
+    leftShoe.quadraticBezierTo(-75, 20, -50, 18); // Empeine
+    leftShoe.quadraticBezierTo(-25, 20, -15, 25); // Punta
+    leftShoe.quadraticBezierTo(-10, 30, -15, 35); // Borde inferior punta
+    leftShoe.quadraticBezierTo(-25, 45, -50, 48); // Suela central
+    leftShoe.quadraticBezierTo(-75, 45, -85, 35); // Suela talón
+    leftShoe.close();
+
     canvas.drawPath(leftShoe, paint);
     canvas.drawPath(leftShoe, outlinePaint);
 
     // Zapato derecho
     final rightShoe = Path();
-    rightShoe.addOval(const Rect.fromLTWH(20, 20, 60, 40));
+    rightShoe.moveTo(85, 35);
+    rightShoe.quadraticBezierTo(90, 30, 85, 25);
+    rightShoe.quadraticBezierTo(75, 20, 50, 18);
+    rightShoe.quadraticBezierTo(25, 20, 15, 25);
+    rightShoe.quadraticBezierTo(10, 30, 15, 35);
+    rightShoe.quadraticBezierTo(25, 45, 50, 48);
+    rightShoe.quadraticBezierTo(75, 45, 85, 35);
+    rightShoe.close();
+
     canvas.drawPath(rightShoe, paint);
     canvas.drawPath(rightShoe, outlinePaint);
 
-    // Cordones o detalles
-    final detailPaint =
+    // Suelas con color diferente
+    final solePaint = Paint()..color = Colors.brown.withOpacity(0.8);
+
+    // Suela izquierda
+    final leftSole = Path();
+    leftSole.addOval(const Rect.fromLTWH(-85, 40, 70, 20));
+    canvas.drawPath(leftSole, solePaint);
+    canvas.drawPath(leftSole, outlinePaint);
+
+    // Suela derecha
+    final rightSole = Path();
+    rightSole.addOval(const Rect.fromLTWH(15, 40, 70, 20));
+    canvas.drawPath(rightSole, solePaint);
+    canvas.drawPath(rightSole, outlinePaint);
+
+    // Cordones más detallados
+    final lacePaint =
         Paint()
-          ..color = Colors.black54
-          ..strokeWidth = 2
+          ..color = Colors.white
+          ..strokeWidth = 3
           ..style = PaintingStyle.stroke;
 
-    // Cordones zapato izquierdo
-    for (int i = 0; i < 3; i++) {
+    // Ojales y cordones zapato izquierdo
+    for (int i = 0; i < 4; i++) {
+      final y = 25.0 + (i * 3);
+      // Ojales
+      canvas.drawCircle(
+        Offset(-65 + (i * 5), y),
+        1.5,
+        Paint()..color = Colors.black87,
+      );
+      canvas.drawCircle(
+        Offset(-45 + (i * 5), y),
+        1.5,
+        Paint()..color = Colors.black87,
+      );
+
+      // Cordones cruzados
       canvas.drawLine(
-        Offset(-70 + (i * 8), 30),
-        Offset(-65 + (i * 8), 40),
-        detailPaint,
+        Offset(-65 + (i * 5), y),
+        Offset(-45 + ((i + 1) * 5), y + 3),
+        lacePaint,
       );
     }
 
     // Cordones zapato derecho
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
+      final y = 25.0 + (i * 3);
+      canvas.drawCircle(
+        Offset(35 + (i * 5), y),
+        1.5,
+        Paint()..color = Colors.black87,
+      );
+      canvas.drawCircle(
+        Offset(55 + (i * 5), y),
+        1.5,
+        Paint()..color = Colors.black87,
+      );
+
       canvas.drawLine(
-        Offset(30 + (i * 8), 30),
-        Offset(35 + (i * 8), 40),
-        detailPaint,
+        Offset(35 + (i * 5), y),
+        Offset(55 + ((i + 1) * 5), y + 3),
+        lacePaint,
       );
     }
+
+    // Logo o marca en el zapato
+    final logoPaint = Paint()..color = Colors.white.withOpacity(0.7);
+
+    canvas.drawOval(const Rect.fromLTWH(-70, 28, 8, 4), logoPaint);
+    canvas.drawOval(const Rect.fromLTWH(40, 28, 8, 4), logoPaint);
   }
 
   void _drawPattern(Canvas canvas, Path basePath) {

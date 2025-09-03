@@ -6,12 +6,14 @@ class MobileClothingDesignerScreen extends StatefulWidget {
   final String category;
   final IconData icon;
   final Color color;
+  final String garmentType;
 
   const MobileClothingDesignerScreen({
     super.key,
     required this.category,
     required this.icon,
     required this.color,
+    required this.garmentType,
   });
 
   @override
@@ -70,9 +72,9 @@ class _MobileClothingDesignerScreenState
 
     _designNameController = TextEditingController();
 
-    // Inicializar diseño por defecto
+    // Inicializar diseño por defecto con tipo de prenda específico
     _currentDesign = {
-      'garment_type': widget.category.toLowerCase(),
+      'garment_type': widget.garmentType,
       'colors': [
         _selectedColor,
       ], // Cambio: usar Color directamente en lugar de .value
@@ -107,6 +109,8 @@ class _MobileClothingDesignerScreenState
         builder:
             (context) => Template3DEditor(
               currentTemplate: _currentDesign,
+              garmentType: widget.garmentType,
+              category: widget.category,
               onTemplateChanged: (design) {
                 setState(() {
                   _currentDesign = design;
