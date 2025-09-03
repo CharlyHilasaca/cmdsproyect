@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../firebase_service.dart';
-import 'home_screen.dart';
+import 'role_selection_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -46,9 +46,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // Mostrar mensaje de éxito
           _showSuccessSnackBar('¡Cuenta creada exitosamente!');
 
-          // Navegar a la pantalla principal
+          // Navegar a la selección de roles
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            MaterialPageRoute(
+              builder: (context) => const RoleSelectionScreen(),
+            ),
           );
         } else if (mounted) {
           _showErrorSnackBar('Error al crear la cuenta. Inténtalo de nuevo.');
@@ -99,10 +101,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.blue.shade600,
-              Colors.purple.shade600,
-            ],
+            colors: [Colors.blue.shade600, Colors.purple.shade600],
           ),
         ),
         child: SafeArea(
@@ -160,7 +159,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.blue.shade300.withOpacity(0.5),
+                                          color: Colors.blue.shade300
+                                              .withOpacity(0.5),
                                           blurRadius: 20,
                                           spreadRadius: 5,
                                         ),
@@ -329,7 +329,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.blue.shade300.withOpacity(0.5),
+                                      color: Colors.blue.shade300.withOpacity(
+                                        0.5,
+                                      ),
                                       blurRadius: 8,
                                       spreadRadius: 2,
                                     ),
@@ -345,25 +347,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                   ),
-                                  child: _isLoading
-                                      ? SizedBox(
-                                          height: 24,
-                                          width: 24,
-                                          child: CircularProgressIndicator(
-                                            valueColor:
-                                                const AlwaysStoppedAnimation<
-                                                  Color
-                                                >(Colors.white),
-                                            strokeWidth: 2,
+                                  child:
+                                      _isLoading
+                                          ? SizedBox(
+                                            height: 24,
+                                            width: 24,
+                                            child: CircularProgressIndicator(
+                                              valueColor:
+                                                  const AlwaysStoppedAnimation<
+                                                    Color
+                                                  >(Colors.white),
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                          : Text(
+                                            'Crear Cuenta',
+                                            style: TextStyle(
+                                              fontSize: isMobile ? 16 : 18,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
-                                        )
-                                        : Text(
-                                          'Crear Cuenta',
-                                          style: TextStyle(
-                                            fontSize: isMobile ? 16 : 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
                                 ),
                               ),
                             ),
@@ -440,9 +443,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               decoration: BoxDecoration(
                                 color: Colors.blue.shade50,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.blue.shade200,
-                                ),
+                                border: Border.all(color: Colors.blue.shade200),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -515,10 +516,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: Colors.blue.shade600,
-                    width: 2,
-                  ),
+                  borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),

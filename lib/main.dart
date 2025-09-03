@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'widgets/auth_wrapper.dart';
+import 'screens/developer/developer_dashboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: const AuthWrapper(),
+      routes: {'/developer': (context) => const DeveloperDashboardScreen()},
     );
   }
 }

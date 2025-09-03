@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'design_editor_screen.dart';
+import '../utils/responsive_helper.dart';
 
 class CreateDesignScreen extends StatefulWidget {
   const CreateDesignScreen({super.key});
@@ -13,6 +14,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> {
   final List<Map<String, dynamic>> _garmentCategories = [
     {
       'id': 'tshirt',
+      'key': 'shirt',
       'name': 'Camisetas',
       'description': 'Camisetas básicas y deportivas',
       'icon': Icons.sports_basketball,
@@ -27,6 +29,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> {
     },
     {
       'id': 'hoodie',
+      'key': 'hoodie',
       'name': 'Hoodies',
       'description': 'Sudaderas con capucha',
       'icon': Icons.wb_cloudy,
@@ -41,6 +44,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> {
     },
     {
       'id': 'pants',
+      'key': 'pants',
       'name': 'Pantalones',
       'description': 'Pantalones casuales y deportivos',
       'icon': Icons.straighten,
@@ -55,6 +59,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> {
     },
     {
       'id': 'dress',
+      'key': 'dress',
       'name': 'Vestidos',
       'description': 'Vestidos casuales y elegantes',
       'icon': Icons.auto_awesome,
@@ -64,6 +69,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> {
     },
     {
       'id': 'jacket',
+      'key': 'jacket',
       'name': 'Chaquetas',
       'description': 'Chaquetas deportivas y casuales',
       'icon': Icons.umbrella,
@@ -78,6 +84,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> {
     },
     {
       'id': 'shoes',
+      'key': 'shoes',
       'name': 'Zapatos',
       'description': 'Calzado deportivo personalizable',
       'icon': Icons.hiking,
@@ -96,155 +103,192 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        title: const Text(
-          'Crear Nuevo Diseño',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        backgroundColor: Colors.indigo,
-        elevation: 0,
-        centerTitle: true,
-        foregroundColor: Colors.white,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header con introducción
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.indigo.shade400, Colors.indigo.shade600],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      appBar:
+          ResponsiveHelper.isWideScreen
+              ? null // No AppBar en web/escritorio para más espacio
+              : AppBar(
+                title: const Text(
+                  'Crear Nuevo Diseño',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.indigo.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                backgroundColor: Colors.indigo,
+                elevation: 0,
+                centerTitle: true,
+                foregroundColor: Colors.white,
+              ),
+      body: ResponsiveBuilder(
+        builder: (context, constraints) {
+          return ResponsiveContainer(
+            maxWidth: 1200,
+            child: SingleChildScrollView(
+              padding: ResponsiveHelper.getResponsivePadding(
+                constraints.maxWidth,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.brush, size: 40, color: Colors.white),
-                  const SizedBox(height: 12),
-                  const Text(
-                    '¡Diseña tu prenda perfecta!',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Selecciona el tipo de prenda que quieres personalizar y comienza a crear tu diseño único.',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                  ),
+                  // Header con introducción adaptativo
+                  _buildHeader(constraints.maxWidth),
+
+                  const SizedBox(height: 32),
+
+                  // Título de sección
+                  _buildSectionTitle(),
+
+                  const SizedBox(height: 24),
+
+                  // Grid de categorías responsivo
+                  _buildCategoriesGrid(constraints.maxWidth),
+
+                  const SizedBox(height: 40),
+
+                  // Información adicional
+                  _buildInfoSection(),
                 ],
               ),
             ),
-
-            const SizedBox(height: 32),
-
-            const Text(
-              'Elige tu prenda',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Selecciona el tipo de prenda que quieres personalizar',
-              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Grid de categorías
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.75, // Cambiado de 0.85 a 0.75 para más altura
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-              ),
-              itemCount: _garmentCategories.length,
-              itemBuilder: (context, index) {
-                final category = _garmentCategories[index];
-                return _buildCategoryCard(category);
-              },
-            ),
-
-            const SizedBox(height: 32),
-
-            // Información adicional
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade200),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.info, color: Colors.blue.shade600),
-                      const SizedBox(width: 12),
-                      Text(
-                        '¿Cómo funciona?',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade800,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInfoStep('1', 'Selecciona el tipo de prenda'),
-                  _buildInfoStep(
-                    '2',
-                    'Personaliza colores, patrones y diseños',
-                  ),
-                  _buildInfoStep('3', 'Ajusta las dimensiones y detalles'),
-                  _buildInfoStep('4', 'Guarda tu diseño en la nube'),
-                ],
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildCategoryCard(Map<String, dynamic> category) {
+  Widget _buildHeader(double screenWidth) {
+    final isWideScreen = ResponsiveHelper.isWideScreen;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isWideScreen ? 32 : 24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.indigo.shade400, Colors.indigo.shade600],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(isWideScreen ? 20 : 16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.indigo.withOpacity(0.3),
+            blurRadius: isWideScreen ? 16 : 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isWideScreen) ...[
+            // Título más prominente para web/escritorio
+            Text(
+              'Crear Nuevo Diseño',
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          Row(
+            children: [
+              Icon(
+                Icons.auto_awesome,
+                color: Colors.white,
+                size: isWideScreen ? 32 : 28,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Diseño Personalizado',
+                  style: TextStyle(
+                    fontSize: isWideScreen ? 24 : 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isWideScreen
+                ? 'Crea prendas únicas con nuestro editor avanzado. Personaliza colores, patrones, tallas y más. Perfecto para expresar tu estilo personal.'
+                : 'Crea prendas únicas con colores, patrones y tallas personalizadas.',
+            style: TextStyle(
+              fontSize: isWideScreen ? 18 : 16,
+              color: Colors.white.withOpacity(0.9),
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Elige tu prenda',
+          style: TextStyle(
+            fontSize: ResponsiveHelper.isWideScreen ? 32 : 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Selecciona el tipo de prenda que quieres personalizar',
+          style: TextStyle(
+            fontSize: ResponsiveHelper.isWideScreen ? 18 : 16,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoriesGrid(double screenWidth) {
+    final columns = ResponsiveHelper.getGridColumns(screenWidth);
+    final aspectRatio = ResponsiveHelper.getCardAspectRatio(screenWidth);
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        childAspectRatio: aspectRatio,
+        crossAxisSpacing: ResponsiveHelper.isWideScreen ? 24 : 16,
+        mainAxisSpacing: ResponsiveHelper.isWideScreen ? 24 : 16,
+      ),
+      itemCount: _garmentCategories.length,
+      itemBuilder: (context, index) {
+        final category = _garmentCategories[index];
+        return _buildCategoryCard(category, screenWidth);
+      },
+    );
+  }
+
+  Widget _buildCategoryCard(Map<String, dynamic> category, double screenWidth) {
+    final isWideScreen = ResponsiveHelper.isWideScreen;
+
     return Card(
-      elevation: 8,
+      elevation: isWideScreen ? 12 : 8,
       shadowColor: category['color'].withOpacity(0.3),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(isWideScreen ? 20 : 16),
+      ),
       child: InkWell(
         onTap: () => _selectCategory(category),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(isWideScreen ? 20 : 16),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(isWideScreen ? 20 : 16),
             gradient: LinearGradient(
               colors: category['gradient'],
               begin: Alignment.topLeft,
@@ -252,28 +296,32 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(12), // Reducido de 16 a 12
+            padding: EdgeInsets.all(isWideScreen ? 20 : 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Icono
                 Container(
-                  padding: const EdgeInsets.all(8), // Reducido de 12 a 8
+                  padding: EdgeInsets.all(isWideScreen ? 12 : 8),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(isWideScreen ? 16 : 12),
                   ),
-                  child: Icon(category['icon'], size: 28, color: Colors.white), // Reducido de 32 a 28
+                  child: Icon(
+                    category['icon'],
+                    size: isWideScreen ? 36 : 28,
+                    color: Colors.white,
+                  ),
                 ),
 
-                const SizedBox(height: 8), // Reducido de 12 a 8
+                SizedBox(height: isWideScreen ? 16 : 8),
 
                 // Nombre
                 Text(
                   category['name'],
-                  style: const TextStyle(
-                    fontSize: 16, // Reducido de 18 a 16
+                  style: TextStyle(
+                    fontSize: isWideScreen ? 20 : 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -288,10 +336,10 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> {
                   child: Text(
                     category['description'],
                     style: TextStyle(
-                      fontSize: 12, // Reducido de 14 a 12
+                      fontSize: isWideScreen ? 14 : 12,
                       color: Colors.white.withOpacity(0.9),
                     ),
-                    maxLines: 2,
+                    maxLines: isWideScreen ? 3 : 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -299,34 +347,67 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> {
                 const Spacer(),
 
                 // Características
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 2,
-                  children:
-                      (category['features'] as List<String>)
-                          .take(2)
-                          .map(
-                            (feature) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6, // Reducido de 8 a 6
-                                vertical: 3, // Reducido de 4 a 3
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(8), // Reducido de 12 a 8
-                              ),
-                              child: Text(
-                                feature,
-                                style: const TextStyle(
-                                  fontSize: 9, // Reducido de 10 a 9
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
+                if (isWideScreen) ...[
+                  // Mostrar más características en pantallas grandes
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children:
+                        (category['features'] as List<String>)
+                            .take(4)
+                            .map(
+                              (feature) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  feature,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
-                            ),
-                          )
-                          .toList(),
-                ),
+                            )
+                            .toList(),
+                  ),
+                ] else ...[
+                  // Mostrar menos características en móviles
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 2,
+                    children:
+                        (category['features'] as List<String>)
+                            .take(2)
+                            .map(
+                              (feature) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  feature,
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                  ),
+                ],
               ],
             ),
           ),
@@ -335,34 +416,48 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> {
     );
   }
 
-  Widget _buildInfoStep(String number, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
+  Widget _buildInfoSection() {
+    final isWideScreen = ResponsiveHelper.isWideScreen;
+
+    return Container(
+      padding: EdgeInsets.all(isWideScreen ? 32 : 20),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(isWideScreen ? 20 : 12),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: Colors.blue.shade600,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                number,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: Colors.blue.shade600,
+                size: isWideScreen ? 28 : 24,
+              ),
+              SizedBox(width: isWideScreen ? 16 : 12),
+              Expanded(
+                child: Text(
+                  '¿Sabías que...?',
+                  style: TextStyle(
+                    fontSize: isWideScreen ? 22 : 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade700,
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(fontSize: 14, color: Colors.blue.shade700),
+          SizedBox(height: isWideScreen ? 16 : 12),
+          Text(
+            isWideScreen
+                ? 'Cada prenda que diseñes puede ser completamente personalizada con una amplia gama de colores, patrones únicos y tallas precisas. Nuestro sistema de diseño 3D te permite visualizar tu creación en tiempo real, asegurando que el resultado final sea exactamente lo que imaginaste.'
+                : 'Cada prenda puede ser personalizada con colores, patrones y tallas específicas. Usa nuestro editor 3D para ver los cambios en tiempo real.',
+            style: TextStyle(
+              fontSize: isWideScreen ? 16 : 14,
+              color: Colors.blue.shade600,
+              height: 1.6,
             ),
           ),
         ],
@@ -371,7 +466,6 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> {
   }
 
   void _selectCategory(Map<String, dynamic> category) {
-    // Navegar al editor de diseño con la categoría seleccionada
     Navigator.push(
       context,
       MaterialPageRoute(

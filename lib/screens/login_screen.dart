@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../firebase_service.dart';
 import 'register_screen.dart';
-import 'home_screen.dart';
+import '../widgets/auth_wrapper.dart';
+import '../utils/developer_access.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  int _secretTapCount = 0;
 
   @override
   void dispose() {
@@ -38,9 +40,15 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         if (userCredential != null && mounted) {
-          // Navegar a la pantalla principal
+          // Redirección automática basada en el rol del usuario:
+          // El AuthWrapper verificará automáticamente el rol en Firestore y 
+          // redirigirá a la pantalla correspondiente:
+          // - developer/admin/super_admin → DeveloperDashboardScreen
+          // - manufacturer → ManufacturerDashboardScreen  
+          // - designer → HomeScreen
+          // - sin rol → RoleSelectionScreen
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            MaterialPageRoute(builder: (context) => const AuthWrapper()),
           );
         } else if (mounted) {
           _showErrorSnackBar(
@@ -69,6 +77,24 @@ class _LoginScreenState extends State<LoginScreen> {
         duration: const Duration(seconds: 3),
       ),
     );
+  }
+
+  void _handleSecretTap() {
+    _secretTapCount++;
+    if (_secretTapCount >= 7) {
+      // 7 toques para activar modo desarrollador
+      _secretTapCount = 0;
+      DeveloperAccess.showDeveloperAccess(context);
+    }
+
+    // Reset contador después de 3 segundos sin toques
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _secretTapCount = 0;
+        });
+      }
+    });
   }
 
   @override
@@ -129,29 +155,32 @@ class _LoginScreenState extends State<LoginScreen> {
                               builder: (context, double value, child) {
                                 return Transform.scale(
                                   scale: value,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.blue.shade600,
-                                          Colors.purple.shade600,
+                                  child: GestureDetector(
+                                    onTap: _handleSecretTap,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.blue.shade600,
+                                            Colors.purple.shade600,
+                                          ],
+                                        ),
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.blue.shade300
+                                                .withOpacity(0.5),
+                                            blurRadius: 20,
+                                            spreadRadius: 5,
+                                          ),
                                         ],
                                       ),
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.blue.shade300
-                                              .withOpacity(0.5),
-                                          blurRadius: 20,
-                                          spreadRadius: 5,
-                                        ),
-                                      ],
-                                    ),
-                                    child: Icon(
-                                      Icons.account_circle,
-                                      size: isMobile ? 60 : 80,
-                                      color: Colors.white,
+                                      child: Icon(
+                                        Icons.account_circle,
+                                        size: isMobile ? 60 : 80,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 );

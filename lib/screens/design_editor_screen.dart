@@ -5,6 +5,7 @@ import '../widgets/design_canvas.dart';
 import '../widgets/color_palette.dart';
 import '../widgets/pattern_selector.dart';
 import '../widgets/size_selector.dart';
+import '../utils/responsive_helper.dart';
 
 class DesignEditorScreen extends StatefulWidget {
   final Map<String, dynamic> garmentCategory;
@@ -117,7 +118,7 @@ class _DesignEditorScreenState extends State<DesignEditorScreen>
       Colors.teal,
       Colors.brown,
     ];
-    
+
     // Solo agregar el color base si no está ya en la paleta
     if (!_colorPalette.any((color) => color.value == baseColor.value)) {
       _colorPalette.insert(0, baseColor);
@@ -126,24 +127,26 @@ class _DesignEditorScreenState extends State<DesignEditorScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isWideScreen = ResponsiveHelper.isWideScreen;
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Editor de Diseño',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontSize: isWideScreen ? 20 : 18,
                 color: Colors.white,
               ),
             ),
             Text(
               widget.garmentCategory['name'],
               style: TextStyle(
-                fontSize: 14,
+                fontSize: isWideScreen ? 16 : 14,
                 color: Colors.white.withOpacity(0.9),
               ),
             ),
@@ -161,7 +164,8 @@ class _DesignEditorScreenState extends State<DesignEditorScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          isScrollable: true,
+          isScrollable:
+              !ResponsiveHelper.isWideScreen, // No scroll en pantallas grandes
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white.withOpacity(0.7),
@@ -173,77 +177,180 @@ class _DesignEditorScreenState extends State<DesignEditorScreen>
                   .toList(),
         ),
       ),
-      body: Column(
+      body:
+          ResponsiveHelper.isWideScreen
+              ? _buildWideScreenLayout()
+              : _buildMobileLayout(),
+    );
+  }
+
+  Widget _buildWideScreenLayout() {
+    return ResponsiveContainer(
+      maxWidth: 1400,
+      child: Row(
         children: [
-          // Canvas de diseño
+          // Canvas de diseño (lado izquierdo)
           Expanded(
-            flex: 3,
+            flex: 2,
             child: Container(
-              margin: const EdgeInsets.all(16),
+              margin: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
                 child: DesignCanvas(
                   garmentType: widget.garmentCategory['id'],
                   design: _currentDesign,
-                  onDesignChange: _updateDesign,
                 ),
               ),
             ),
           ),
 
-          // Panel de herramientas
-          Expanded(
-            flex: 2,
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+          // Panel de herramientas (lado derecho)
+          Container(
+            width: 400,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(-4, 0),
                 ),
-              ),
-              child: Column(
-                children: [
-                  // Handle del panel
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Tabs horizontales para escritorio
+                Container(
+                  decoration: BoxDecoration(
+                    color: widget.garmentCategory['color'],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicatorColor: Colors.white,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Colors.white.withOpacity(0.7),
+                    tabs:
+                        _tools
+                            .map(
+                              (tool) => Tab(
+                                icon: Icon(tool['icon']),
+                                text: tool['name'],
+                              ),
+                            )
+                            .toList(),
+                  ),
+                ),
 
-                  // Contenido de las pestañas
-                  Expanded(
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildColorTool(),
-                        _buildPatternTool(),
-                        _buildSizeTool(),
-                        _build3DViewTool(),
-                      ],
-                    ),
+                // Contenido de las herramientas
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildColorTool(),
+                      _buildPatternTool(),
+                      _buildSizeTool(),
+                      _build3DViewTool(),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    return Column(
+      children: [
+        // Canvas de diseño
+        Expanded(
+          flex: 3,
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: DesignCanvas(
+                garmentType: widget.garmentCategory['id'],
+                design: _currentDesign,
+                onDesignChange: _updateDesign,
+              ),
+            ),
+          ),
+        ),
+
+        // Panel de herramientas
+        Expanded(
+          flex: 2,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              children: [
+                // Handle del panel
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+
+                // Contenido de las pestañas
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildColorTool(),
+                      _buildPatternTool(),
+                      _buildSizeTool(),
+                      _build3DViewTool(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
