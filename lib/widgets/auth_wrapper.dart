@@ -64,13 +64,19 @@ class AuthWrapper extends StatelessWidget {
                       );
                       return const ManufacturerDashboardScreen();
                     case 'developer':
-                      print('DEBUG: Redirecting to DeveloperDashboardScreen (developer)');
+                      print(
+                        'DEBUG: Redirecting to DeveloperDashboardScreen (developer)',
+                      );
                       return const DeveloperDashboardScreen();
                     case 'admin':
-                      print('DEBUG: Redirecting to DeveloperDashboardScreen (admin)');
+                      print(
+                        'DEBUG: Redirecting to DeveloperDashboardScreen (admin)',
+                      );
                       return const DeveloperDashboardScreen();
                     case 'super_admin':
-                      print('DEBUG: Redirecting to DeveloperDashboardScreen (super_admin)');
+                      print(
+                        'DEBUG: Redirecting to DeveloperDashboardScreen (super_admin)',
+                      );
                       return const DeveloperDashboardScreen();
                     default:
                       // Si tiene un rol desconocido, enviar a selección de roles

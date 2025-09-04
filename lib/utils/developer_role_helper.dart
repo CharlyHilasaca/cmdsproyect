@@ -23,10 +23,11 @@ class DeveloperRoleHelper {
   /// Establece el rol de desarrollador para un usuario específico por email
   static Future<void> setUserAsDeveloperByEmail(String email) async {
     try {
-      final querySnapshot = await _firestore
-          .collection('users')
-          .where('email', isEqualTo: email)
-          .get();
+      final querySnapshot =
+          await _firestore
+              .collection('users')
+              .where('email', isEqualTo: email)
+              .get();
 
       if (querySnapshot.docs.isNotEmpty) {
         final userDoc = querySnapshot.docs.first;
@@ -73,15 +74,18 @@ class DeveloperRoleHelper {
   /// Lista todos los usuarios con rol de desarrollador
   static Future<void> listDeveloperUsers() async {
     try {
-      final querySnapshot = await _firestore
-          .collection('users')
-          .where('role', whereIn: ['developer', 'admin', 'super_admin'])
-          .get();
+      final querySnapshot =
+          await _firestore
+              .collection('users')
+              .where('role', whereIn: ['developer', 'admin', 'super_admin'])
+              .get();
 
       print('👨‍💻 Usuarios con rol de desarrollador:');
       for (final doc in querySnapshot.docs) {
         final userData = doc.data();
-        print('  - ${userData['name']} (${userData['email']}) - Rol: ${userData['role']}');
+        print(
+          '  - ${userData['name']} (${userData['email']}) - Rol: ${userData['role']}',
+        );
       }
     } catch (e) {
       print('❌ Error listando desarrolladores: $e');
@@ -100,7 +104,7 @@ class DeveloperRoleHelper {
         'createdAt': FieldValue.serverTimestamp(),
         'roleUpdatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      
+
       print('🔧 Usuario de desarrollo creado/actualizado:');
       print('  - Email: ${user.email}');
       print('  - Rol: developer');
@@ -144,11 +148,12 @@ Future<void> listDevs() async {
 Future<void> checkMyRole() async {
   final user = FirebaseAuth.instance.currentUser;
   if (user != null) {
-    final userDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-    
+    final userDoc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
     if (userDoc.exists) {
       final userData = userDoc.data() as Map<String, dynamic>;
       print('🔍 Tu información de usuario:');

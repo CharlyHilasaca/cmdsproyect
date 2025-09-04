@@ -41,10 +41,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (userCredential != null && mounted) {
           // Redirección automática basada en el rol del usuario:
-          // El AuthWrapper verificará automáticamente el rol en Firestore y 
+          // El AuthWrapper verificará automáticamente el rol en Firestore y
           // redirigirá a la pantalla correspondiente:
           // - developer/admin/super_admin → DeveloperDashboardScreen
-          // - manufacturer → ManufacturerDashboardScreen  
+          // - manufacturer → ManufacturerDashboardScreen
           // - designer → HomeScreen
           // - sin rol → RoleSelectionScreen
           Navigator.of(context).pushReplacement(

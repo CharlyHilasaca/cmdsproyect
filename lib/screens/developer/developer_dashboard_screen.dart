@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../widgets/auth_wrapper.dart';
+import '../../widgets/model_3d_viewer.dart';
+import '../../widgets/model_3d_creator.dart';
+import '../../services/firebase_storage_service.dart';
 import '../admin/user_management_screen.dart';
 
 class DeveloperDashboardScreen extends StatefulWidget {
@@ -16,6 +20,7 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
   int _selectedIndex = 0;
   bool _isUploading = false;
   double _uploadProgress = 0.0;
+  String? _selectedCategory = 'Camisetas'; // Categoría seleccionada para subida
 
   final List<Map<String, dynamic>> _menuItems = [
     {
@@ -24,9 +29,19 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
       'selectedIcon': Icons.view_in_ar,
     },
     {
-      'title': 'Categorías',
-      'icon': Icons.category_outlined,
-      'selectedIcon': Icons.category,
+      'title': 'Visor 3D',
+      'icon': Icons.threed_rotation_outlined,
+      'selectedIcon': Icons.threed_rotation,
+    },
+    {
+      'title': 'Motor 3D',
+      'icon': Icons.construction_outlined,
+      'selectedIcon': Icons.construction,
+    },
+    {
+      'title': 'Galería',
+      'icon': Icons.photo_library_outlined,
+      'selectedIcon': Icons.photo_library,
     },
     {
       'title': 'Formatos',
@@ -37,11 +52,6 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
       'title': 'Usuarios',
       'icon': Icons.people_outlined,
       'selectedIcon': Icons.people,
-    },
-    {
-      'title': 'Configuración',
-      'icon': Icons.settings_outlined,
-      'selectedIcon': Icons.settings,
     },
   ];
 
@@ -378,13 +388,15 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
       case 0:
         return _buildTemplatesContent();
       case 1:
-        return _buildCategoriesContent();
+        return _build3DViewerContent();
       case 2:
-        return _buildFormatsContent();
+        return _build3DCreatorContent();
       case 3:
-        return _buildUsersContent();
+        return _build3DGalleryContent();
       case 4:
-        return _buildSettingsContent();
+        return _buildFormatsContent();
+      case 5:
+        return _buildUsersContent();
       default:
         return _buildTemplatesContent();
     }
@@ -392,7 +404,7 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
 
   Widget _buildTemplatesContent() {
     final isMobile = MediaQuery.of(context).size.width < 600;
-    
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
       child: Column(
@@ -412,7 +424,7 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
 
   Widget _buildUploadSection() {
     final isMobile = MediaQuery.of(context).size.width < 600;
-    
+
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
       decoration: BoxDecoration(
@@ -460,19 +472,19 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
           // Category and format selectors
           isMobile
               ? Column(
-                  children: [
-                    _buildCategorySelector(),
-                    const SizedBox(height: 16),
-                    _buildFormatSelector(),
-                  ],
-                )
+                children: [
+                  _buildCategorySelector(),
+                  const SizedBox(height: 16),
+                  _buildFormatSelector(),
+                ],
+              )
               : Row(
-                  children: [
-                    Expanded(child: _buildCategorySelector()),
-                    const SizedBox(width: 16),
-                    Expanded(child: _buildFormatSelector()),
-                  ],
-                ),
+                children: [
+                  Expanded(child: _buildCategorySelector()),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildFormatSelector()),
+                ],
+              ),
 
           SizedBox(height: isMobile ? 16 : 24),
 
@@ -481,21 +493,19 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _isUploading ? null : _handleFileUpload,
-              icon: _isUploading
-                  ? SizedBox(
-                      width: isMobile ? 16 : 20,
-                      height: isMobile ? 16 : 20,
-                      child: const CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white,
+              icon:
+                  _isUploading
+                      ? SizedBox(
+                        width: isMobile ? 16 : 20,
+                        height: isMobile ? 16 : 20,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
-                      ),
-                    )
-                  : Icon(
-                      Icons.upload_file,
-                      size: isMobile ? 18 : 20,
-                    ),
+                      )
+                      : Icon(Icons.upload_file, size: isMobile ? 18 : 20),
               label: Text(
                 _isUploading ? 'Subiendo...' : 'Seleccionar y Subir Archivo',
                 style: TextStyle(fontSize: isMobile ? 14 : 16),
@@ -503,9 +513,7 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6C63FF),
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(
-                  vertical: isMobile ? 12 : 16,
-                ),
+                padding: EdgeInsets.symmetric(vertical: isMobile ? 12 : 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -555,7 +563,7 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: _clothingCategories.first,
+              value: _selectedCategory,
               isExpanded: true,
               dropdownColor: const Color(0xFF1A1A2E),
               style: const TextStyle(color: Colors.white),
@@ -567,7 +575,9 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
                     );
                   }).toList(),
               onChanged: (value) {
-                // Handle category selection
+                setState(() {
+                  _selectedCategory = value;
+                });
               },
             ),
           ),
@@ -602,27 +612,28 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
               isExpanded: true,
               dropdownColor: const Color(0xFF1A1A2E),
               style: const TextStyle(color: Colors.white),
-              items: _supportedFormats.map((format) {
-                return DropdownMenuItem<String>(
-                  value: format['name'] as String,
-                  child: Row(
-                    children: [
-                      Icon(
-                        format['icon'],
-                        color: format['color'],
-                        size: 16,
+              items:
+                  _supportedFormats.map((format) {
+                    return DropdownMenuItem<String>(
+                      value: format['name'] as String,
+                      child: Row(
+                        children: [
+                          Icon(
+                            format['icon'],
+                            color: format['color'],
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              format['name'],
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          format['name'],
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
               onChanged: (value) {
                 // Handle format selection
               },
@@ -635,7 +646,7 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
 
   Widget _buildCurrentTemplatesSection() {
     final isMobile = MediaQuery.of(context).size.width < 600;
-    
+
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
       decoration: BoxDecoration(
@@ -676,7 +687,7 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
 
   Widget _buildTemplateCard(String category) {
     final isMobile = MediaQuery.of(context).size.width < 600;
-    
+
     return Container(
       padding: EdgeInsets.all(isMobile ? 12 : 16),
       decoration: BoxDecoration(
@@ -719,22 +730,138 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
     );
   }
 
-  Widget _buildCategoriesContent() {
-    return const Center(
-      child: Text(
-        'Gestión de Categorías',
-        style: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
+  Widget _build3DViewerContent() {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(24),
+          child: Row(
+            children: [
+              Icon(
+                Icons.threed_rotation,
+                color: const Color(0xFF6C63FF),
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Visor 3D Avanzado',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
         ),
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseStorageService.getAllActiveModels(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
+                );
+              }
+
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return _buildEmptyState3DViewer();
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(24),
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, index) {
+                  final doc = snapshot.data!.docs[index];
+                  final data = doc.data() as Map<String, dynamic>;
+                  return _build3DModelCard(doc.id, data);
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _build3DCreatorContent() {
+    return const Model3DCreator();
+  }
+
+  Widget _build3DGalleryContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.photo_library,
+                color: const Color(0xFF6C63FF),
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Galería de Modelos 3D',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const Spacer(),
+              ElevatedButton.icon(
+                onPressed: () => _openCreator(),
+                icon: const Icon(Icons.add),
+                label: const Text('Crear Modelo'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6C63FF),
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseStorageService.getAllActiveModels(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
+                );
+              }
+
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return _buildEmptyStateGallery();
+              }
+
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: MediaQuery.of(context).size.width < 600 ? 2 : 4,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.8,
+                ),
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, index) {
+                  final doc = snapshot.data!.docs[index];
+                  final data = doc.data() as Map<String, dynamic>;
+                  return _buildGalleryModelCard(doc.id, data);
+                },
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildFormatsContent() {
     final isMobile = MediaQuery.of(context).size.width < 600;
-    
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
       child: Column(
@@ -770,7 +897,7 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
 
   Widget _buildUsersContent() {
     final isMobile = MediaQuery.of(context).size.width < 600;
-    
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
       child: Column(
@@ -873,20 +1000,17 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
                   ),
                 );
               },
-              icon: Icon(
-                Icons.admin_panel_settings,
-                size: isMobile ? 18 : 20,
-              ),
+              icon: Icon(Icons.admin_panel_settings, size: isMobile ? 18 : 20),
               label: Text(
-                isMobile ? 'Gestión de Usuarios' : 'Abrir Gestión Completa de Usuarios',
+                isMobile
+                    ? 'Gestión de Usuarios'
+                    : 'Abrir Gestión Completa de Usuarios',
                 style: TextStyle(fontSize: isMobile ? 14 : 16),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6C63FF),
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(
-                  vertical: isMobile ? 12 : 16,
-                ),
+                padding: EdgeInsets.symmetric(vertical: isMobile ? 12 : 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -900,7 +1024,7 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
 
   Widget _buildRoleInfo(String roleKey, String roleName, String description) {
     final isMobile = MediaQuery.of(context).size.width < 600;
-    
+
     Color roleColor;
     IconData roleIcon;
 
@@ -940,11 +1064,7 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
       ),
       child: Row(
         children: [
-          Icon(
-            roleIcon,
-            color: roleColor,
-            size: isMobile ? 20 : 24,
-          ),
+          Icon(roleIcon, color: roleColor, size: isMobile ? 20 : 24),
           SizedBox(width: isMobile ? 8 : 12),
           Expanded(
             child: Column(
@@ -978,7 +1098,7 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
 
   Widget _buildFormatCard(Map<String, dynamic> format) {
     final isMobile = MediaQuery.of(context).size.width < 600;
-    
+
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
@@ -1023,29 +1143,30 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
           Wrap(
             spacing: 6,
             runSpacing: 4,
-            children: (format['extensions'] as List<String>).map((ext) {
-              return Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 6 : 8,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: (format['color'] as Color).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: format['color'].withOpacity(0.3),
-                  ),
-                ),
-                child: Text(
-                  ext,
-                  style: TextStyle(
-                    color: format['color'],
-                    fontSize: isMobile ? 10 : 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              );
-            }).toList(),
+            children:
+                (format['extensions'] as List<String>).map((ext) {
+                  return Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 6 : 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: (format['color'] as Color).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: format['color'].withOpacity(0.3),
+                      ),
+                    ),
+                    child: Text(
+                      ext,
+                      style: TextStyle(
+                        color: format['color'],
+                        fontSize: isMobile ? 10 : 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  );
+                }).toList(),
           ),
         ],
       ),
@@ -1068,40 +1189,89 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
   Future<void> _handleFileUpload() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.any,
+        type: FileType.custom,
+        allowedExtensions: ['obj', 'fbx', '3ds', 'dae', 'gltf', 'glb', 'ply', 'stl'],
         allowMultiple: false,
       );
 
-      if (result != null) {
+      if (result != null && result.files.single.bytes != null) {
         setState(() {
           _isUploading = true;
           _uploadProgress = 0.0;
         });
 
-        // Simulate upload progress
-        for (int i = 0; i <= 100; i += 10) {
-          await Future.delayed(const Duration(milliseconds: 200));
-          setState(() {
-            _uploadProgress = i / 100;
-          });
-        }
-
-        // Here you would implement the actual Firebase Storage upload
-        // final file = File(result.files.single.path!);
-        // await _uploadToFirebaseStorage(file);
-
-        setState(() {
-          _isUploading = false;
-          _uploadProgress = 0.0;
-        });
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Archivo subido exitosamente'),
-              backgroundColor: Color(0xFF6C63FF),
-            ),
+        final file = result.files.single;
+        final fileName = file.name;
+        final fileBytes = file.bytes!;
+        
+        // Determinar la categoría seleccionada
+        final selectedCategory = _selectedCategory ?? 'Camisetas';
+        
+        try {
+          // Crear un PlatformFile con los datos
+          final platformFile = PlatformFile(
+            name: fileName,
+            size: fileBytes.length,
+            bytes: fileBytes,
           );
+          
+          // Detectar tipo de archivo
+          final fileExtension = fileName.toLowerCase().split('.').last;
+          String fileType = 'model';
+          if (['obj', 'fbx', 'gltf', 'glb', '3ds', 'dae', 'ply', 'stl'].contains(fileExtension)) {
+            fileType = 'model';
+          }
+
+          // Subir archivo a Firebase Storage
+          final uploadResult = await FirebaseStorageService.upload3DFile(
+            file: platformFile,
+            category: selectedCategory,
+            fileType: fileType,
+            description: 'Modelo 3D subido desde el panel de desarrollador',
+          );
+
+          setState(() {
+            _isUploading = false;
+            _uploadProgress = 0.0;
+          });
+
+          if (mounted) {
+            // Mostrar mensaje de éxito
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('¡Archivo subido exitosamente! Redirigiendo al Motor 3D...'),
+                backgroundColor: Color(0xFF6C63FF),
+                duration: Duration(seconds: 2),
+              ),
+            );
+
+            // Esperar un momento para que el usuario vea el mensaje
+            await Future.delayed(const Duration(seconds: 1));
+
+            // Redirigir al Motor 3D
+            setState(() {
+              _selectedIndex = 4; // Índice del Motor 3D
+            });
+
+            // Opcional: Mostrar un diálogo con información del archivo subido
+            if (uploadResult != null) {
+              _showUploadSuccessDialog(fileName, selectedCategory, uploadResult['downloadUrl'] ?? '');
+            }
+          }
+        } catch (e) {
+          setState(() {
+            _isUploading = false;
+            _uploadProgress = 0.0;
+          });
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error al subir archivo: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
       }
     } catch (e) {
@@ -1113,7 +1283,7 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al subir archivo: $e'),
+            content: Text('Error al seleccionar archivo: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -1175,5 +1345,364 @@ class _DeveloperDashboardScreenState extends State<DeveloperDashboardScreen> {
         }
       }
     }
+  }
+
+  Widget _buildEmptyState3DViewer() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.threed_rotation,
+            size: 80,
+            color: Colors.grey[600],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No hay modelos 3D disponibles',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Crea tu primer modelo 3D usando el Motor 3D',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[500],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyStateGallery() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.photo_library,
+            size: 80,
+            color: Colors.grey[600],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'La galería está vacía',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Comienza creando modelos 3D',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[500],
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => _openCreator(),
+            icon: const Icon(Icons.add),
+            label: const Text('Crear Primer Modelo'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6C63FF),
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _build3DModelCard(String modelId, Map<String, dynamic> data) {
+    return Card(
+      color: Colors.grey[850],
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.grey[700],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.threed_rotation,
+                color: Color(0xFF6C63FF),
+                size: 40,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data['name'] ?? 'Modelo sin nombre',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    data['category'] ?? 'Sin categoría',
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Subido: ${_formatDate(data['uploadDate'])}',
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => _openModelViewer(modelId, data),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6C63FF),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Ver en 3D'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGalleryModelCard(String modelId, Map<String, dynamic> data) {
+    return Card(
+      color: Colors.grey[850],
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey[700],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.threed_rotation,
+                  color: Color(0xFF6C63FF),
+                  size: 40,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              data['name'] ?? 'Modelo sin nombre',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              data['category'] ?? 'Sin categoría',
+              style: TextStyle(
+                color: Colors.grey[400],
+                fontSize: 12,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => _openModelViewer(modelId, data),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6C63FF),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+                child: const Text('Ver', style: TextStyle(fontSize: 12)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openCreator() {
+    setState(() {
+      _selectedIndex = 4; // Índice del Motor 3D
+    });
+  }
+
+  void _openModelViewer(String modelId, Map<String, dynamic> data) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+            title: Text(data['name'] ?? 'Modelo 3D'),
+            backgroundColor: const Color(0xFF1E1E2E),
+            foregroundColor: Colors.white,
+          ),
+          backgroundColor: const Color(0xFF1E1E2E),
+          body: Model3DViewer(
+            modelUrl: data['downloadUrl'] ?? '',
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(dynamic timestamp) {
+    if (timestamp == null) return 'Fecha desconocida';
+    
+    try {
+      DateTime date;
+      if (timestamp is Timestamp) {
+        date = timestamp.toDate();
+      } else if (timestamp is String) {
+        date = DateTime.parse(timestamp);
+      } else {
+        return 'Fecha inválida';
+      }
+      
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return 'Fecha inválida';
+    }
+  }
+
+  void _showUploadSuccessDialog(String fileName, String category, String downloadUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1A1A2E),
+          title: Row(
+            children: [
+              const Icon(
+                Icons.check_circle,
+                color: Color(0xFF6C63FF),
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                '¡Archivo Subido!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Tu archivo 3D ha sido subido exitosamente y está listo para usar en el Motor 3D.',
+                style: TextStyle(
+                  color: Colors.grey[300],
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0F0F23),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFF16213E)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.insert_drive_file,
+                          color: Color(0xFF6C63FF),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            fileName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.category,
+                          color: Color(0xFF6C63FF),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Categoría: $category',
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cerrar',
+                style: TextStyle(
+                  color: Colors.grey[400],
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Ya estamos en el Motor 3D, no necesitamos redirigir de nuevo
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6C63FF),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Ir al Motor 3D'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
